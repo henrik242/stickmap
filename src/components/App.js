@@ -2,6 +2,8 @@ require('../styles/app.css');
 
 const React = require('react');
 const Draggable = require('react-draggable');
+const val2col = require('./color.js');
+
 
 //const ListContainer = require('./ListContainer.jsx');
 
@@ -33,10 +35,31 @@ const App = React.createClass({
   },
 
   enableEditVertex(vertexId) {
-    this.setState({
-      editVertexId: vertexId,
-      editVertexDepth: this.getVertex(vertexId).depth
-    });
+    if (this.state.editVertexId !== -1 && this.state.editVertexId !== vertexId) {
+
+      let ids = [ this.state.editVertexId, vertexId ].sort();
+      let found = this.state.edges.findIndex(((elem) => elem.fromId === ids[0] && elem.toId === ids[1]));
+
+      if (found !== -1) {
+        // Remove edge
+        let newState = this.state.edges;
+        newState.splice(found, 1);
+        this.setState({
+          edges: newState
+        });
+      } else {
+        // Add edge
+        this.setState({
+          edges: this.state.edges.concat({fromId: ids[0], toId: ids[1]})
+        });
+      }
+    } else {
+      // Enable edit mode
+      this.setState({
+        editVertexId: vertexId,
+        editVertexDepth: this.getVertex(vertexId).depth
+      });
+    }
   },
 
   getVertex(vertexId) {
@@ -68,7 +91,15 @@ const App = React.createClass({
       vertices: newState,
       editVertexId: -1
     });
+  },
 
+  selectVertex(vertexId) {
+    console.log("click");
+    if (this.state.editVertexId =! -1 && this.state.editVertexId != vertexId) {
+      this.setState({
+        edges: this.state.edges.concat({ fromId: this.state.editVertexId, toId: vertexId})
+      });
+    }
   },
 
   componentDidUpdate() {
@@ -89,7 +120,7 @@ const App = React.createClass({
 
         <div className="canvas">
           {this.state.edges.map((edge, index) =>
-            <Line key={index}
+            <Edge key={index}
                   fromVertex={this.getVertex(edge.fromId)}
                   toVertex={this.getVertex(edge.toId)} />)}
 
@@ -98,7 +129,8 @@ const App = React.createClass({
                   edit={vertex.id === this.state.editVertexId}
                   vertex={vertex}
                   enableEditVertex={this.enableEditVertex}
-                  updateVertex={this.updateVertex} />)}
+                  updateVertex={this.updateVertex}
+                  selectVertex={this.selectVertex} />)}
 
           </div>
       </div>
@@ -106,15 +138,29 @@ const App = React.createClass({
   }
 });
 
-const Line = React.createClass({
+const Edge = React.createClass({
+
   render() {
+    let from = this.props.fromVertex;
+    let to = this.props.toVertex;
+    let startColor = val2col(from.x < to.x ? from.depth : to.depth);
+    let endColor = val2col(from.x >= to.x ? from.depth : to.depth);
+    let gradId = "edgegradient" + from.id + "-" + to.id;
+    let stroke = "url(#" + gradId + ")";
+
     return <div className="edge">
       <svg width="800" height="600">
-        <line x1={this.props.fromVertex.x + 20}
-              y1={this.props.fromVertex.y + 20}
-              x2={this.props.toVertex.x + 20}
-              y2={this.props.toVertex.y + 20}
-              stroke="black"
+        <defs>
+          <linearGradient id={gradId}>
+            <stop offset="0%" stopColor={startColor} />
+            <stop offset="1000%" stopColor={endColor} />
+          </linearGradient>
+        </defs>
+        <line x1={from.x + 20}
+              y1={from.y + 20}
+              x2={to.x + 20}
+              y2={to.y + 20}
+              stroke={stroke}
               strokeWidth="2"/>
       </svg>
     </div>
@@ -132,21 +178,27 @@ const Vertex = React.createClass({
     this.props.enableEditVertex(this.props.vertex.id)
   },
 
+  select() {
+    this.props.selectVertex(this.props.vertex.id)
+  },
+
   render() {
-    let verticesize = 20;
+    let vertexsize = 20;
+
+    let color = val2col(this.props.vertex.depth);
 
     return <Draggable bounds="parent"
                       onDrag={this.handleDrag}
                       position={{x: this.props.vertex.x, y: this.props.vertex.y}}>
       <div className="vertex" onDoubleClick={this.edit}>
 
-        <svg height={verticesize} width={verticesize}>
-          <circle cx={verticesize/2}
-                  cy={verticesize/2}
-                  r={(verticesize-2)/2}
+        <svg height={vertexsize} width={vertexsize}>
+          <circle cx={vertexsize/2}
+                  cy={vertexsize/2}
+                  r={(vertexsize-2)/2}
                   stroke="black"
-                  strokeWidth={this.props.edit ? 1 : 0}
-                  fill="red" />
+                  strokeWidth={this.props.edit ? 2 : 1}
+                  fill={color} />
 
           <text x="50%" y="50%"
                 textAnchor="middle"
