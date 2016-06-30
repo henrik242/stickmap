@@ -3,9 +3,7 @@ require('../styles/app.css');
 const React = require('react');
 const Draggable = require('react-draggable');
 const val2col = require('./color.js');
-
-
-//const ListContainer = require('./ListContainer.jsx');
+const downloadJson = require('./file.js');
 
 const App = React.createClass({
   getInitialState() {
@@ -27,6 +25,10 @@ const App = React.createClass({
       editVertexClicked: false,
       editVertexClickTimer: undefined
     }
+  },
+
+  download() {
+    download(JSON.stringify(this.state), "state.json");
   },
 
   addVertex() {
