@@ -28,6 +28,11 @@
   z-index: 5;
 }
 
+.vertex svg text {
+  text-decoration: overline;
+  font-size: 0.9em;
+}
+
 .canvas {
   position: absolute;
   width: 800px;

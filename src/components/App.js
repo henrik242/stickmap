@@ -23,43 +23,94 @@ const App = React.createClass({
       ],
       nextVertexId: 4,
       editVertexId: -1,
-      editVertexDepth: 0
+      editVertexDepth: 0,
+      editVertexClicked: false,
+      editVertexClickTimer: undefined
     }
   },
 
   addVertex() {
+    let depth = 0, x = 0, y = 0;
+    let newEdges = this.state.edges.slice();
+
+    if (this.state.editVertexId !== -1) {
+      let editVertex = this.getVertex(this.state.editVertexId);
+      x = editVertex.x + 20;
+      y = editVertex.y + 20;
+      depth = editVertex.depth;
+      newEdges.push({fromId: editVertex.id, toId: this.state.nextVertexId});
+    }
+
     this.setState({
-      vertices: this.state.vertices.concat({id: this.state.nextVertexId, depth: 0, x: 0, y: 0}),
+      edges: newEdges,
+      vertices: this.state.vertices.concat({id: this.state.nextVertexId, depth: depth, x: x, y: y}),
       nextVertexId: this.state.nextVertexId + 1
     })
   },
 
-  enableEditVertex(vertexId) {
-    if (this.state.editVertexId !== -1 && this.state.editVertexId !== vertexId) {
+  deleteVertex() {
+    let newEdges = this.state.edges.slice().filter((edge) =>
+      edge.fromId !== this.state.editVertexId && edge.toId !== this.state.editVertexId);
 
-      let ids = [ this.state.editVertexId, vertexId ].sort();
-      let found = this.state.edges.findIndex(((elem) => elem.fromId === ids[0] && elem.toId === ids[1]));
+    let vertexIndex = this.getVertexIndex(this.state.editVertexId);
+    let newVertices = this.state.vertices.slice();
+    newVertices.splice(vertexIndex, 1);
 
-      if (found !== -1) {
-        // Remove edge
-        let newState = this.state.edges;
-        newState.splice(found, 1);
-        this.setState({
-          edges: newState
-        });
-      } else {
-        // Add edge
-        this.setState({
-          edges: this.state.edges.concat({fromId: ids[0], toId: ids[1]})
-        });
+    this.setState({
+      edges: newEdges,
+      vertices: newVertices,
+      editVertexId: -1
+    });
+  },
+
+  editVertexAction(vertexId) {
+    if (this.state.editVertexClicked) {
+      // Doubleclick!
+
+      clearTimeout(this.state.editVertexClickTimer);
+
+      if (this.state.editVertexId !== -1 && this.state.editVertexId !== vertexId) {
+
+        let ids = [this.state.editVertexId, vertexId].sort();
+        let found = this.state.edges.findIndex(((elem) => elem.fromId === ids[0] && elem.toId === ids[1]));
+
+        if (found !== -1) {
+          // Remove edge
+          let newEdges = this.state.edges.slice();
+          newEdges.splice(found, 1);
+
+          this.setState({
+            edges: newEdges
+          });
+
+        } else {
+          // Add edge
+          this.setState({
+            edges: this.state.edges.concat({fromId: ids[0], toId: ids[1]})
+          });
+        }
       }
-    } else {
-      // Enable edit mode
+
+      this.setState({
+        editVertexClickTimer: undefined,
+        editVertexClicked: false
+      });
+
+      return;
+    }
+
+    let doubleClickTimeout = function() {
       this.setState({
         editVertexId: vertexId,
-        editVertexDepth: this.getVertex(vertexId).depth
+        editVertexDepth: this.getVertex(vertexId).depth,
+        editVertexClicked: false
       });
-    }
+    }.bind(this);
+
+    this.setState({
+      editVertexClicked: true,
+      editVertexClickTimer: setTimeout(doubleClickTimeout, 200)
+    })
   },
 
   getVertex(vertexId) {
@@ -77,7 +128,12 @@ const App = React.createClass({
   },
 
   submitEditVertex(e) {
-    if (e.keyCode === 13) {
+    if (e.keyCode == 27) {
+      this.setState({
+        editVertexDepth: 0,
+        editVertexId: -1
+      });
+    } else if (e.keyCode === 13) {
       let theVertex = this.getVertex(this.state.editVertexId);
       theVertex.depth = e.target.value;
       this.updateVertex(theVertex);
@@ -85,33 +141,27 @@ const App = React.createClass({
   },
 
   updateVertex(newVertex) {
-    let newState = this.state.vertices;
-    newState[this.getVertexIndex(newVertex.id)] = newVertex;
+    let newVertices = this.state.vertices.slice();
+    newVertices[this.getVertexIndex(newVertex.id)] = newVertex;
     this.setState({
-      vertices: newState,
-      editVertexId: -1
+      vertices: newVertices,
+      editVertexId: -1,
+      editVertexDepth: 0
     });
-  },
-
-  selectVertex(vertexId) {
-    console.log("click");
-    if (this.state.editVertexId =! -1 && this.state.editVertexId != vertexId) {
-      this.setState({
-        edges: this.state.edges.concat({ fromId: this.state.editVertexId, toId: vertexId})
-      });
-    }
   },
 
   componentDidUpdate() {
     if (this.state.editVertexId !== -1) {
       this.refs.editDepthInput.focus();
+      //this.refs.editDepthInput.select();
     }
   },
 
   render(){
     let addVertexButton = <button onClick={this.addVertex}>Add vertex</button>;
-    let editVertexInput = this.state.editVertexId > -1 && <div>Edit depth:
-          <input ref="editDepthInput" onChange={this.handleEditChange} onKeyDown={this.submitEditVertex} value={this.state.editVertexDepth}/></div>;
+    let editVertexInput = this.state.editVertexId !== -1 && <span>Edit depth:
+          <input ref="editDepthInput" size="3" onChange={this.handleEditChange} onKeyDown={this.submitEditVertex} value={this.state.editVertexDepth}/>
+          <button onClick={this.deleteVertex}>Delete vertex</button></span>;
 
     return (
       <div>
@@ -126,11 +176,10 @@ const App = React.createClass({
 
           {this.state.vertices.map((vertex) =>
             <Vertex key={vertex.id}
-                  edit={vertex.id === this.state.editVertexId}
+                  editing={vertex.id === this.state.editVertexId}
                   vertex={vertex}
-                  enableEditVertex={this.enableEditVertex}
-                  updateVertex={this.updateVertex}
-                  selectVertex={this.selectVertex} />)}
+                  editVertexAction={this.editVertexAction}
+                  updateVertex={this.updateVertex} />)}
 
           </div>
       </div>
@@ -147,19 +196,20 @@ const Edge = React.createClass({
     let endColor = val2col(from.x >= to.x ? from.depth : to.depth);
     let gradId = "edgegradient" + from.id + "-" + to.id;
     let stroke = "url(#" + gradId + ")";
+    let offset = 15;
 
     return <div className="edge">
       <svg width="800" height="600">
         <defs>
           <linearGradient id={gradId}>
             <stop offset="0%" stopColor={startColor} />
-            <stop offset="1000%" stopColor={endColor} />
+            <stop offset="100%" stopColor={endColor} />
           </linearGradient>
         </defs>
-        <line x1={from.x + 20}
-              y1={from.y + 20}
-              x2={to.x + 20}
-              y2={to.y + 20}
+        <line x1={from.x + offset + 5}
+              y1={from.y + offset}
+              x2={to.x + offset + 5}
+              y2={to.y + offset}
               stroke={stroke}
               strokeWidth="2"/>
       </svg>
@@ -175,32 +225,27 @@ const Vertex = React.createClass({
   },
 
   edit() {
-    this.props.enableEditVertex(this.props.vertex.id)
-  },
-
-  select() {
-    this.props.selectVertex(this.props.vertex.id)
+    this.props.editVertexAction(this.props.vertex.id)
   },
 
   render() {
-    let vertexsize = 20;
-
+    let size = 10;
     let color = val2col(this.props.vertex.depth);
 
     return <Draggable bounds="parent"
                       onDrag={this.handleDrag}
                       position={{x: this.props.vertex.x, y: this.props.vertex.y}}>
-      <div className="vertex" onDoubleClick={this.edit}>
 
-        <svg height={vertexsize} width={vertexsize}>
-          <circle cx={vertexsize/2}
-                  cy={vertexsize/2}
-                  r={(vertexsize-2)/2}
+      <div className="vertex" onClick={this.edit}>
+        <svg height={size * 3} width={size * 2}>
+          <circle cx={size}
+                  cy={size/2}
+                  r={(size-2)/2}
                   stroke="black"
-                  strokeWidth={this.props.edit ? 2 : 1}
+                  strokeDasharray="2,2"
+                  strokeWidth={this.props.editing ? 4 : 1}
                   fill={color} />
-
-          <text x="50%" y="50%"
+          <text x="10" y="20"
                 textAnchor="middle"
                 stroke="black"
                 strokeWidth="0"
