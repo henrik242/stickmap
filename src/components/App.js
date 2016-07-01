@@ -272,7 +272,7 @@ const Vertex = React.createClass({
                   cy={size/2}
                   r={(size-2)/2}
                   stroke="black"
-                  strokeDasharray="2,2"
+                  strokeDasharray={this.props.editing ? "2,2" : "none"}
                   strokeWidth={this.props.editing ? 4 : 1}
                   fill={color} />
           <text x="10" y="20"
