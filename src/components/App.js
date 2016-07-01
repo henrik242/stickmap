@@ -5,6 +5,10 @@ const saveJson = require('./file.js');
 const Vertex = require('./Vertex');
 const Edge = require('./Edge');
 
+var clone = function(someObj) {
+  return (JSON.parse(JSON.stringify(someObj)));
+};
+
 const App = React.createClass({
   getInitialState() {
     return {
@@ -31,7 +35,11 @@ const App = React.createClass({
   },
 
   saveState() {
-    saveJson(JSON.stringify(this.state), "stickmap.json");
+    let saveState = clone(this.state);
+    Object.keys(saveState).forEach((key) =>
+      key.match(/^edit/) && delete saveState[key]
+    );
+    saveJson(JSON.stringify(saveState), "stickmap.json");
   },
 
   loadState(event) {
@@ -145,31 +153,45 @@ const App = React.createClass({
   },
 
   handleEditChange(e) {
-    this.setState({
-      editVertexDepth: e.target.value
-    });
+    this.setDepth(e.target.value);
   },
 
   submitEditVertex(e) {
-    if (e.keyCode == 27) {
-      this.setState({
-        editVertexDepth: 0,
-        editVertexId: -1
-      });
-    } else if (e.keyCode === 13) {
-      let theVertex = this.getVertex(this.state.editVertexId);
-      theVertex.depth = e.target.value;
-      this.updateVertex(theVertex);
+    switch (e.keyCode) {
+      case 13:
+        this.setDepth(e.target.value);
+        break;
+      case 27:
+        this.setState({
+          editVertexDepth: 0,
+          editVertexId: -1
+        });
+        break;
+      case 38:
+        e.preventDefault();
+        this.setDepth(this.state.editVertexDepth + 1);
+        break;
+      case 40:
+        e.preventDefault();
+        this.setDepth(this.state.editVertexDepth - 1);
+        break;
     }
+  },
+
+  setDepth(depth) {
+    let newVertices = this.state.vertices.slice();
+    newVertices[this.getVertexIndex(this.state.editVertexId)].depth = depth;
+    this.setState({
+      vertices: newVertices,
+      editVertexDepth: depth
+    })
   },
 
   updateVertex(newVertex) {
     let newVertices = this.state.vertices.slice();
     newVertices[this.getVertexIndex(newVertex.id)] = newVertex;
     this.setState({
-      vertices: newVertices,
-      editVertexId: -1,
-      editVertexDepth: 0
+      vertices: newVertices
     });
   },
 
@@ -186,7 +208,7 @@ const App = React.createClass({
 
   submitZoom(num) {
     this.setState({
-      zoomFactor: Math.max(0.2, this.state.zoomFactor + num)
+      zoomFactor: Math.ceil(Math.max(0.2, this.state.zoomFactor + num) * 10) / 10
     })
   },
 
@@ -199,8 +221,8 @@ const App = React.createClass({
           <span style={{paddingLeft: "10"}}>Depth:
           <input ref="editDepthInput" size="3" onChange={this.handleEditChange} onKeyDown={this.submitEditVertex} value={this.state.editVertexDepth}/>
         </span></span>;
-    let zoomInput = <span><button onClick={this.submitZoom.bind(this, -0.5)}>-</button>
-      <button onClick={this.submitZoom.bind(this, 0.5)}>+</button></span>;
+    let zoomInput = <span><button onClick={this.submitZoom.bind(this, -0.2)}>-</button>
+      <button onClick={this.submitZoom.bind(this, 0.2)}>+</button></span>;
 
     return (
       <div>
