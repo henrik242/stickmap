@@ -53,9 +53,8 @@ const App = React.createClass({
     let newEdges = this.state.edges.slice().filter((edge) =>
       edge.fromId !== this.state.editVertexId && edge.toId !== this.state.editVertexId);
 
-    let vertexIndex = this.getVertexIndex(this.state.editVertexId);
-    let newVertices = this.state.vertices.slice();
-    newVertices.splice(vertexIndex, 1);
+    let newVertices = this.state.vertices.slice().filter((vertex) =>
+      vertex.id !== this.state.editVertexId);
 
     this.setState({
       edges: newEdges,
@@ -76,8 +75,8 @@ const App = React.createClass({
 
       if (this.state.editVertexId !== -1 && this.state.editVertexId !== vertexId) {
 
-        let ids = [this.state.editVertexId, vertexId].sort();
-        let found = this.state.edges.findIndex(((elem) => elem.fromId === ids[0] && elem.toId === ids[1]));
+        let newEdge = [this.state.editVertexId, vertexId].sort();
+        let found = this.state.edges.findIndex(((elem) => elem.fromId === newEdge[0] && elem.toId === newEdge[1]));
 
         if (found !== -1) {
           // Remove edge
@@ -91,7 +90,7 @@ const App = React.createClass({
         } else {
           // Add edge
           this.setState({
-            edges: this.state.edges.concat({fromId: ids[0], toId: ids[1]})
+            edges: this.state.edges.concat({fromId: newEdge[0], toId: newEdge[1]})
           });
         }
       }
@@ -113,33 +112,29 @@ const App = React.createClass({
   },
 
   getVertex(vertexId) {
-    return this.state.vertices.find((element) => element.id === vertexId);
+    return this.state.vertices.find((elem) => elem.id === vertexId);
   },
 
-  getVertexIndex(vertexId) {
-    return this.state.vertices.findIndex((element) => element.id === vertexId);
-  },
-
-  handleEditChange(e) {
+  handleEditVertex(e) {
     this.setDepth(e.target.value);
   },
 
   submitEditVertex(e) {
     switch (e.keyCode) {
-      case 13:
+      case 13: // enter
         this.setDepth(e.target.value);
-        break;
-      case 27:
+        // fallthrough!
+      case 27: // escape
         this.setState({
           editVertexDepth: 0,
           editVertexId: -1
         });
         break;
-      case 38:
+      case 38: // arrow up
         e.preventDefault();
         this.setDepth(this.state.editVertexDepth + 1);
         break;
-      case 40:
+      case 40: // arrow down
         e.preventDefault();
         this.setDepth(this.state.editVertexDepth - 1);
         break;
@@ -147,17 +142,20 @@ const App = React.createClass({
   },
 
   setDepth(depth) {
-    let newVertices = this.state.vertices.slice();
-    newVertices[this.getVertexIndex(this.state.editVertexId)].depth = depth;
+    depth = Math.max(0, depth);
+    let vertex = this.getVertex(this.state.editVertexId);
+    vertex.depth = depth;
+    this.updateVertex(vertex);
+
     this.setState({
-      vertices: newVertices,
       editVertexDepth: depth
     })
   },
 
   updateVertex(newVertex) {
-    let newVertices = this.state.vertices.slice();
-    newVertices[this.getVertexIndex(newVertex.id)] = newVertex;
+    let newVertices = this.state.vertices.map((oldVertex) =>
+        oldVertex.id === newVertex.id ? newVertex : oldVertex);
+
     this.setState({
       vertices: newVertices
     });
@@ -180,12 +178,20 @@ const App = React.createClass({
     })
   },
 
+  saveState() {
+    file.saveState(this.state);
+  },
+
+  loadState(event) {
+    file.loadState(this.setState.bind(this), event);
+  },
+
   render(){
-    let saveButton = <span><button onClick={file.saveState.bind(this, this.state)}>Save map</button></span>;
+    let saveButton = <span><button onClick={this.saveState}>Save map</button></span>;
 
     let loadButton = <span>
       <button onClick={this.clickLoadMap}>Load map</button>
-      <input ref="loadButton" style={{display: 'none'}} type="file" onChange={file.loadState.bind(this, this.setState.bind(this))} />
+      <input ref="loadButton" style={{display: 'none'}} type="file" onChange={this.loadState} />
     </span>;
 
     let addVertexButton = <button onClick={this.addVertex}>Add station</button>;
@@ -193,9 +199,9 @@ const App = React.createClass({
     let editVertexInput = this.state.editVertexId !== -1 && <span>
           <button onClick={this.deleteVertex}>Delete station</button>
           <span style={{paddingLeft: "10"}}>Depth:
-          <input ref="editDepthInput" size="3" onChange={this.handleEditChange} onKeyDown={this.submitEditVertex} value={this.state.editVertexDepth}/>
+          <input ref="editDepthInput" size="3" onChange={this.handleEditVertex} onKeyDown={this.submitEditVertex} value={this.state.editVertexDepth}/>
         </span></span>;
-    
+
     let zoomInput = <span><button onClick={this.submitZoom.bind(this, -0.2)}>-</button>
       <button onClick={this.submitZoom.bind(this, 0.2)}>+</button></span>;
 

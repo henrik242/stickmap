@@ -28,7 +28,7 @@ export function loadState(setCallerState, event) {
     let file = event.target.files[0];
     let reader = new FileReader();
     reader.onload = (fileEvent) => {
-//        try {
+        try {
             var newState = JSON.parse(fileEvent.target.result);
             if (Array.isArray(newState.edges) && Array.isArray(newState.vertices)) {
                 setCallerState({
@@ -36,9 +36,9 @@ export function loadState(setCallerState, event) {
                 });
             }
             return;
-  //      } catch (ex) {}
+        } catch (ex) {}
 
-        //alert("Error: " + file.name + " is not a stickmap state file");
+        alert("Error: " + file.name + " is not a stickmap state file");
     };
     reader.readAsText(file);
 }
