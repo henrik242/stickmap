@@ -3,7 +3,7 @@ require('../styles/app.css');
 const React = require('react');
 const Draggable = require('react-draggable');
 const val2col = require('./color.js');
-const downloadJson = require('./file.js');
+const saveJson = require('./file.js');
 
 const App = React.createClass({
   getInitialState() {
@@ -27,8 +27,28 @@ const App = React.createClass({
     }
   },
 
-  download() {
-    download(JSON.stringify(this.state), "state.json");
+  saveState() {
+    saveJson(JSON.stringify(this.state), "stickmap.json");
+  },
+
+  loadState(event) {
+    let file = event.target.files[0];
+    let reader = new FileReader();
+    reader.onload = (fileEvent) => {
+      this.refs.loadButton.value = "";
+      try {
+        var newState = JSON.parse(fileEvent.target.result);
+        if (Array.isArray(newState.edges) && Array.isArray(newState.vertices)) {
+          this.setState({
+              ...newState
+          });
+        }
+        return;
+      } catch (ex) {}
+
+      alert("Error: " + file.name + " is not a stickmap state file");
+    };
+    reader.readAsText(file);
   },
 
   addVertex() {
@@ -70,6 +90,10 @@ const App = React.createClass({
       // Doubleclick!
 
       clearTimeout(this.state.editVertexClickTimer);
+      this.setState({
+        editVertexClickTimer: undefined,
+        editVertexClicked: false
+      });
 
       if (this.state.editVertexId !== -1 && this.state.editVertexId !== vertexId) {
 
@@ -92,12 +116,6 @@ const App = React.createClass({
           });
         }
       }
-
-      this.setState({
-        editVertexClickTimer: undefined,
-        editVertexClicked: false
-      });
-
       return;
     }
 
@@ -159,7 +177,13 @@ const App = React.createClass({
     }
   },
 
+  clickLoadMap() {
+    this.refs.loadButton.click()
+  },
+
   render(){
+    let saveButton = <span><button onClick={this.saveState}>Save map</button></span>;
+    let loadButton = <span><button onClick={this.clickLoadMap}>Load map</button><input ref="loadButton" style={{display: 'none'}} type="file" onChange={this.loadState} /></span>;
     let addVertexButton = <button onClick={this.addVertex}>Add vertex</button>;
     let editVertexInput = this.state.editVertexId !== -1 && <span>Edit depth:
           <input ref="editDepthInput" size="3" onChange={this.handleEditChange} onKeyDown={this.submitEditVertex} value={this.state.editVertexDepth}/>
@@ -167,6 +191,8 @@ const App = React.createClass({
 
     return (
       <div>
+        {saveButton}
+        {loadButton}
         {addVertexButton}
         {editVertexInput}
 
