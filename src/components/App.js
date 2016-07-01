@@ -1,13 +1,9 @@
 require('../styles/app.css');
 
 const React = require('react');
-const saveJson = require('./file.js');
+const file = require('./file.js');
 const Vertex = require('./Vertex');
 const Edge = require('./Edge');
-
-var clone = function(someObj) {
-  return (JSON.parse(JSON.stringify(someObj)));
-};
 
 const App = React.createClass({
   getInitialState() {
@@ -32,34 +28,6 @@ const App = React.createClass({
       editVertexClicked: false,
       editVertexClickTimer: undefined
     }
-  },
-
-  saveState() {
-    let saveState = clone(this.state);
-    Object.keys(saveState).forEach((key) =>
-      key.match(/^edit/) && delete saveState[key]
-    );
-    saveJson(JSON.stringify(saveState), "stickmap.json");
-  },
-
-  loadState(event) {
-    let file = event.target.files[0];
-    let reader = new FileReader();
-    reader.onload = (fileEvent) => {
-      this.refs.loadButton.value = "";
-      try {
-        var newState = JSON.parse(fileEvent.target.result);
-        if (Array.isArray(newState.edges) && Array.isArray(newState.vertices)) {
-          this.setState({
-              ...newState
-          });
-        }
-        return;
-      } catch (ex) {}
-
-      alert("Error: " + file.name + " is not a stickmap state file");
-    };
-    reader.readAsText(file);
   },
 
   addVertex() {
@@ -213,14 +181,21 @@ const App = React.createClass({
   },
 
   render(){
-    let saveButton = <span><button onClick={this.saveState}>Save map</button></span>;
-    let loadButton = <span><button onClick={this.clickLoadMap}>Load map</button><input ref="loadButton" style={{display: 'none'}} type="file" onChange={this.loadState} /></span>;
+    let saveButton = <span><button onClick={file.saveState.bind(this, this.state)}>Save map</button></span>;
+
+    let loadButton = <span>
+      <button onClick={this.clickLoadMap}>Load map</button>
+      <input ref="loadButton" style={{display: 'none'}} type="file" onChange={file.loadState.bind(this, this.setState.bind(this))} />
+    </span>;
+
     let addVertexButton = <button onClick={this.addVertex}>Add station</button>;
+
     let editVertexInput = this.state.editVertexId !== -1 && <span>
           <button onClick={this.deleteVertex}>Delete station</button>
           <span style={{paddingLeft: "10"}}>Depth:
           <input ref="editDepthInput" size="3" onChange={this.handleEditChange} onKeyDown={this.submitEditVertex} value={this.state.editVertexDepth}/>
         </span></span>;
+    
     let zoomInput = <span><button onClick={this.submitZoom.bind(this, -0.2)}>-</button>
       <button onClick={this.submitZoom.bind(this, 0.2)}>+</button></span>;
 
