@@ -22,7 +22,7 @@ const App = React.createClass({
         {fromId: 2, toId: 4}
       ],
       nextVertexId: 5,
-      zoomFactor: 1,
+      zoomFactor: 1.0,
       editVertexId: -1,
       editVertexDepth: 0,
       editVertexClicked: false,
@@ -184,22 +184,23 @@ const App = React.createClass({
     this.refs.loadButton.click()
   },
 
-  submitZoom(e) {
-    if (e.keyCode = 13) {
-      this.setState({
-        zoomFactor: e.target.value
-      })
-    }
+  submitZoom(num) {
+    this.setState({
+      zoomFactor: Math.max(0.2, this.state.zoomFactor + num)
+    })
   },
 
   render(){
     let saveButton = <span><button onClick={this.saveState}>Save map</button></span>;
     let loadButton = <span><button onClick={this.clickLoadMap}>Load map</button><input ref="loadButton" style={{display: 'none'}} type="file" onChange={this.loadState} /></span>;
-    let addVertexButton = <button onClick={this.addVertex}>Add vertex</button>;
-    let editVertexInput = this.state.editVertexId !== -1 && <span>Edit depth:
+    let addVertexButton = <button onClick={this.addVertex}>Add station</button>;
+    let editVertexInput = this.state.editVertexId !== -1 && <span>
+          <button onClick={this.deleteVertex}>Delete station</button>
+          <span style={{paddingLeft: "10"}}>Depth:
           <input ref="editDepthInput" size="3" onChange={this.handleEditChange} onKeyDown={this.submitEditVertex} value={this.state.editVertexDepth}/>
-          <button onClick={this.deleteVertex}>Delete vertex</button></span>;
-    let zoomInput = <span>Zoom:<input size="3" onKeyDown={this.submitZoom} defaultValue={this.state.zoomFactor} /></span>;
+        </span></span>;
+    let zoomInput = <span><button onClick={this.submitZoom.bind(this, -0.5)}>-</button>
+      <button onClick={this.submitZoom.bind(this, 0.5)}>+</button></span>;
 
     return (
       <div>

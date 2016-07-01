@@ -18,14 +18,14 @@ const Vertex = React.createClass({
   },
 
   render() {
-    let size = 10;
     let color = val2col(this.props.vertex.depth);
+    let zoom = this.props.zoomFactor;
 
     return <Draggable bounds="parent"
                       onDrag={this.handleDrag}
                       position={{
-                        x: (this.props.vertex.x) * this.props.zoomFactor,
-                        y: (this.props.vertex.y) * this.props.zoomFactor}}>
+                        x: (this.props.vertex.x) * zoom,
+                        y: (this.props.vertex.y) * zoom}}>
 
       <div className="vertex" onClick={this.edit}>
         <svg height="30" width="20">
