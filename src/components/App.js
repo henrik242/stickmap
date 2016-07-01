@@ -9,17 +9,19 @@ const App = React.createClass({
   getInitialState() {
     return {
       vertices: [
-        {id: 0, depth: 12, x: 100, y: 100},
-        {id: 1, depth: 24, x: 200, y: 200},
-        {id: 2, depth: 10, x: 50, y: 20},
-        {id: 3, depth: 90, x: 10, y: 1}
+        {id: 0, depth: 6, x: 10, y: 10},
+        {id: 1, depth: 12, x: 50, y: 80},
+        {id: 2, depth: 32, x: 160, y: 180},
+        {id: 3, depth: 50, x: 250, y: 170},
+        {id: 4, depth: 72, x: 100, y: 300}
       ],
       edges: [
         {fromId: 0, toId: 1},
         {fromId: 1, toId: 2},
-        {fromId: 1, toId: 3}
+        {fromId: 2, toId: 3},
+        {fromId: 2, toId: 4}
       ],
-      nextVertexId: 4,
+      nextVertexId: 5,
       editVertexId: -1,
       editVertexDepth: 0,
       editVertexClicked: false,
@@ -227,7 +229,7 @@ const Edge = React.createClass({
     let offset = 15;
 
     return <div className="edge">
-      <svg width="800" height="600">
+      <svg width="1024" height="768">
         <defs>
           <linearGradient id={gradId}>
             <stop offset="0%" stopColor={startColor} />
