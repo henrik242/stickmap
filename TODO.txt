@@ -1,0 +1,2 @@
+- click-and-drag @ mobile doesn't work
+
