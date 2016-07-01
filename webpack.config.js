@@ -1,14 +1,38 @@
 var webpack = require('webpack');
 var path = require('path');
 
-module.exports = {
-  devtool: 'inline-source-map',
+var isProduction = process.env.NODE_ENV === 'production';
+var port = process.env.PORT || 3000;
 
-  entry: [
+var plugins = [
+  new webpack.optimize.CommonsChunkPlugin('common.js'),
+  new webpack.DefinePlugin({
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
+  })
+];
+
+if (!isProduction) {
+  plugins.push(new webpack.HotModuleReplacementPlugin()),
+  plugins.push(new webpack.NoErrorsPlugin())
+}
+
+if (isProduction) {
+  plugins.push(new webpack.optimize.DedupePlugin());
+  plugins.push(new webpack.optimize.UglifyJsPlugin());
+}
+
+var entry = {
+  bundle: !isProduction ? [
     'webpack-dev-server/client?http://localhost:3000',
     'webpack/hot/only-dev-server',
     './src/entry'
-  ],
+  ] : './src/entry'
+};
+
+module.exports = {
+  devtool: !isProduction ? 'inline-source-map' : null,
+
+  entry: entry,
 
   output: {
     path: path.join(__dirname, '/public/'),
@@ -16,13 +40,7 @@ module.exports = {
     filename: 'bundle.js'
   },
 
-  plugins: [
-    new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV)
-    }),
-    new webpack.optimize.CommonsChunkPlugin('common.js'),
-    new webpack.NoErrorsPlugin()
-  ],
+  plugins: plugins,
 
   module: {
     loaders: [{
@@ -30,7 +48,7 @@ module.exports = {
       loader: 'expose?React'
     }, {
       test: /\.jsx?$/,
-      loaders: ['react-hot', 'babel'],
+      loaders: !isProduction ? ['react-hot', 'babel'] : ['babel'],
       exclude: /node_modules/
     }, {
       test: /\.css$/,

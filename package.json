@@ -4,7 +4,9 @@
   "description": "Stickmap - simple underwater cave mapping",
   "main": "index.js",
   "scripts": {
-    "start": "node_modules/.bin/webpack-dev-server --content-base public --port 3000 --hot"
+    "start": "node_modules/.bin/webpack-dev-server --content-base public --port 3000 --hot",
+    "postinstall": "npm run build",
+    "build": "webpack"
   },
   "author": "Henrik Brautaset Aronsen <henrik@synth.no> (http://henrik.synth.no/stickmap/)",
   "license": "LGPL-3.0",

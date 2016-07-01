@@ -1,21 +1,3 @@
-.fade-in-out-enter {
-  opacity: 0.01;
-  transition: opacity .5s ease-in;
-}
-
-.fade-in-out-enter.fade-in-out-enter-active {
-  opacity: 1;
-}
-
-.fade-in-out-leave {
-  opacity: 1;
-  transition: opacity .5s ease-in;
-}
-
-.fade-in-out-leave.fade-in-out-leave-active {
-  opacity: 0.01;
-}
-
 .edge {
   position: absolute;
 }
