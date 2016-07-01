@@ -1,9 +1,9 @@
 require('../styles/app.css');
 
 const React = require('react');
-const Draggable = require('react-draggable');
-const val2col = require('./color.js');
 const saveJson = require('./file.js');
+const Vertex = require('./Vertex');
+const Edge = require('./Edge');
 
 const App = React.createClass({
   getInitialState() {
@@ -22,6 +22,7 @@ const App = React.createClass({
         {fromId: 2, toId: 4}
       ],
       nextVertexId: 5,
+      zoomFactor: 1,
       editVertexId: -1,
       editVertexDepth: 0,
       editVertexClicked: false,
@@ -174,13 +175,21 @@ const App = React.createClass({
 
   componentDidUpdate() {
     if (this.state.editVertexId !== -1) {
-      this.refs.editDepthInput.focus();
+      //this.refs.editDepthInput.focus();
       //this.refs.editDepthInput.select();
     }
   },
 
   clickLoadMap() {
     this.refs.loadButton.click()
+  },
+
+  submitZoom(e) {
+    if (e.keyCode = 13) {
+      this.setState({
+        zoomFactor: e.target.value
+      })
+    }
   },
 
   render(){
@@ -190,9 +199,11 @@ const App = React.createClass({
     let editVertexInput = this.state.editVertexId !== -1 && <span>Edit depth:
           <input ref="editDepthInput" size="3" onChange={this.handleEditChange} onKeyDown={this.submitEditVertex} value={this.state.editVertexDepth}/>
           <button onClick={this.deleteVertex}>Delete vertex</button></span>;
+    let zoomInput = <span>Zoom:<input size="3" onKeyDown={this.submitZoom} defaultValue={this.state.zoomFactor} /></span>;
 
     return (
       <div>
+        {zoomInput}
         {saveButton}
         {loadButton}
         {addVertexButton}
@@ -202,87 +213,20 @@ const App = React.createClass({
           {this.state.edges.map((edge, index) =>
             <Edge key={index}
                   fromVertex={this.getVertex(edge.fromId)}
-                  toVertex={this.getVertex(edge.toId)} />)}
+                  toVertex={this.getVertex(edge.toId)}
+                  zoomFactor={this.state.zoomFactor} />)}
 
           {this.state.vertices.map((vertex) =>
             <Vertex key={vertex.id}
                   editing={vertex.id === this.state.editVertexId}
                   vertex={vertex}
                   editVertexAction={this.editVertexAction}
-                  updateVertex={this.updateVertex} />)}
+                  updateVertex={this.updateVertex}
+                  zoomFactor={this.state.zoomFactor} />)}
 
           </div>
       </div>
     )
-  }
-});
-
-const Edge = React.createClass({
-
-  render() {
-    let from = this.props.fromVertex;
-    let to = this.props.toVertex;
-    let startColor = val2col(from.x < to.x ? from.depth : to.depth);
-    let endColor = val2col(from.x >= to.x ? from.depth : to.depth);
-    let gradId = "edgegradient" + from.id + "-" + to.id;
-    let stroke = "url(#" + gradId + ")";
-    let offset = 15;
-
-    return <div className="edge">
-      <svg width="1024" height="768">
-        <defs>
-          <linearGradient id={gradId}>
-            <stop offset="0%" stopColor={startColor} />
-            <stop offset="100%" stopColor={endColor} />
-          </linearGradient>
-        </defs>
-        <line x1={from.x + offset + 5}
-              y1={from.y + offset}
-              x2={to.x + offset + 5}
-              y2={to.y + offset}
-              stroke={stroke}
-              strokeWidth="2"/>
-      </svg>
-    </div>
-
-  }
-});
-
-const Vertex = React.createClass({
-
-  handleDrag: function (e, ui) {
-    this.props.updateVertex({id: this.props.vertex.id, x: ui.x, y: ui.y, depth: this.props.vertex.depth });
-  },
-
-  edit() {
-    this.props.editVertexAction(this.props.vertex.id)
-  },
-
-  render() {
-    let size = 10;
-    let color = val2col(this.props.vertex.depth);
-
-    return <Draggable bounds="parent"
-                      onDrag={this.handleDrag}
-                      position={{x: this.props.vertex.x, y: this.props.vertex.y}}>
-
-      <div className="vertex" onClick={this.edit}>
-        <svg height={size * 3} width={size * 2}>
-          <circle cx={size}
-                  cy={size/2}
-                  r={(size-2)/2}
-                  stroke="black"
-                  strokeDasharray={this.props.editing ? "2,2" : "none"}
-                  strokeWidth={this.props.editing ? 4 : 1}
-                  fill={color} />
-          <text x="10" y="20"
-                textAnchor="middle"
-                stroke="black"
-                strokeWidth="0"
-                dy="5" dx="0">{this.props.vertex.depth}</text>
-        </svg>
-      </div>
-    </Draggable>
   }
 });
 
