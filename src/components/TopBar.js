@@ -5,7 +5,7 @@ var TopBar = React.createClass({
 
   getInitialState() {
     return {
-      editVertexDepth: 0
+      currentVertexDepth: 0
     }
   },
 
@@ -39,41 +39,39 @@ var TopBar = React.createClass({
         this.setDepth(e.target.value);
         // fallthrough!
       case 27: // escape
-        this.setState({
-          editVertexDepth: 0
-        });
-        this.props.setState({
-          editVertexId: -1
-        });
+        this.setCurrentVertexDepth(0);
         break;
       case 38: // arrow up
         e.preventDefault();
-        this.setDepth(this.state.editVertexDepth + 1);
+        this.setDepth(this.state.currentVertexDepth + 1);
         break;
       case 40: // arrow down
         e.preventDefault();
-        this.setDepth(this.state.editVertexDepth - 1);
+        this.setDepth(this.state.currentVertexDepth - 1);
         break;
     }
   },
 
   setDepth(depth) {
     depth = Math.max(0, depth);
-    let vertex = this.props.getVertex(this.props.state.editVertexId);
+    let vertex = this.props.getCurrentVertex();
     vertex.depth = depth;
     this.props.updateVertex(vertex);
 
+    this.setCurrentVertexDepth(depth);
+  },
+
+  setCurrentVertexDepth(depth) {
     this.setState({
-      editVertexDepth: depth
+      currentVertexDepth: depth
     })
+
   },
 
   componentWillReceiveProps(nextProps) {
-    let editVertex = nextProps.getEditVertex();
-    if (editVertex) {
-      this.setState({
-        editVertexDepth: editVertex.depth
-      })
+    let current = nextProps.getCurrentVertex();
+    if (current) {
+      this.setCurrentVertexDepth(current.depth);
     }
   },
 
@@ -88,10 +86,10 @@ var TopBar = React.createClass({
 
     let addVertexButton = <button onClick={this.props.addVertex}>Add station</button>;
 
-    let editVertexInput = this.props.state.editVertexId !== -1 && <span>
+    let editVertexInput = this.props.state.currentVertexId !== -1 && <span>
           <button onClick={this.props.deleteVertex}>Delete station</button>
           <span style={{paddingLeft: "10"}}>Depth:
-          <input ref="editDepthInput" size="3" onChange={this.handleEditVertex} onKeyDown={this.submitEditVertex} value={this.state.editVertexDepth}/>
+          <input ref="editDepthInput" size="3" onChange={this.handleEditVertex} onKeyDown={this.submitEditVertex} value={this.state.currentVertexDepth}/>
         </span></span>;
 
     let zoomInput = <span><button onClick={this.submitZoom.bind(this, -0.2)}>-</button>

@@ -19,7 +19,7 @@ var saveJson = function(content, filename) {
 export function saveState(state) {
     let saveState = clone(state);
     Object.keys(saveState).forEach((key) =>
-        key.match(/^editVertexClick/) && delete saveState[key]
+        key.match(/^transient/) && delete saveState[key]
     );
     saveJson(JSON.stringify(saveState), "stickmap.json");
 }

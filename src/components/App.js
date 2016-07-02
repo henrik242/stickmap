@@ -23,89 +23,100 @@ const App = React.createClass({
       ],
       nextVertexId: 5,
       zoomFactor: 1.0,
-      editVertexId: -1,
-      editVertexClicked: false,
-      editVertexClickTimer: undefined
+      currentVertexId: -1,
+      transient: {
+        vertexClicked: false,
+        vertexClickedTimer: undefined
+      }
     }
   },
 
-  getEditVertex() {
-    if (this.state.editVertexId !== -1) {
-      let vertex = this.getVertex(this.state.editVertexId);
+  setCurrentVertex(vertexId) {
+    this.setState({
+      currentVertexId: vertexId
+    })
+  },
+
+  getCurrentVertex() {
+    if (this.state.currentVertexId !== -1) {
+      let vertex = this.getVertex(this.state.currentVertexId);
       if (vertex) return vertex;
-      console.log("Illegal vertex ID: " + this.state.editVertexId);
-      this.setState({
-        editVertexId: -1
-      })
+      this.setCurrentVertex(-1);
     }
     return false;
   },
 
-  isEditVertex(id) {
-    return id === this.state.editVertexId;
+  isCurrentVertex(id) {
+    return id === this.state.currentVertexId;
   },
 
   addVertex() {
     let depth = 0, x = parseInt(Math.random() * 30 + 10), y = parseInt(Math.random() * 30 + 10);
-    let newEdges = this.state.edges.slice();
+    let updatedEdges = this.state.edges.slice();
 
-    let editVertex = this.getEditVertex();
-    if (editVertex) {
-      x = editVertex.x + x;
-      y = editVertex.y + y;
-      depth = editVertex.depth;
-      newEdges.push({fromId: editVertex.id, toId: this.state.nextVertexId});
+    let current = this.getCurrentVertex();
+    if (current) {
+      x = current.x + x;
+      y = current.y + y;
+      depth = current.depth;
+      updatedEdges.push({fromId: current.id, toId: this.state.nextVertexId});
     }
 
     this.setState({
-      edges: newEdges,
+      edges: updatedEdges,
       vertices: this.state.vertices.concat({id: this.state.nextVertexId, depth: depth, x: x, y: y}),
       nextVertexId: this.state.nextVertexId + 1
     })
   },
 
   deleteVertex() {
-    let newEdges = this.state.edges.slice().filter((edge) =>
-      !this.isEditVertex(edge.fromId) && !this.isEditVertex(edge.toId));
+    let updatedEdges = this.state.edges.slice().filter((edge) =>
+      !this.isCurrentVertex(edge.fromId) && !this.isCurrentVertex(edge.toId));
 
-    let newVertices = this.state.vertices.slice().filter((vertex) =>
-      !this.isEditVertex(vertex.id));
+    let updatedVertices = this.state.vertices.slice().filter((vertex) =>
+      !this.isCurrentVertex(vertex.id));
 
+    this.setCurrentVertex(-1);
     this.setState({
-      edges: newEdges,
-      vertices: newVertices,
-      editVertexId: -1
+      edges: updatedEdges,
+      vertices: updatedVertices
+    });
+  },
+
+  setVertexClicked(clicked, timer) {
+    this.setState({
+      transient: {
+        vertexClicked: clicked,
+        vertexClickedTimer: timer
+      }
     });
   },
 
   editVertexAction(vertexId) {
-    if (this.state.editVertexClicked) {
+    if (this.state.transient.vertexClicked) {
       // Doubleclick!
 
-      clearTimeout(this.state.editVertexClickTimer);
-      this.setState({
-        editVertexClickTimer: undefined,
-        editVertexClicked: false
-      });
+      clearTimeout(this.state.transient.vertexClickedTimer);
+      this.setVertexClicked(false, undefined);
 
-      if (this.getEditVertex() && !this.isEditVertex(vertexId)) {
+      if (this.getCurrentVertex() && !this.isCurrentVertex(vertexId)) {
 
-        let newEdge = [this.state.editVertexId, vertexId].sort();
-        let found = this.state.edges.findIndex(((elem) => elem.fromId === newEdge[0] && elem.toId === newEdge[1]));
+        let edge = [this.state.currentVertexId, vertexId].sort();
+        let found = this.state.edges.findIndex(((elem) => elem.fromId === edge[0] && elem.toId === edge[1]));
 
         if (found !== -1) {
           // Remove edge
-          let newEdges = this.state.edges.slice();
-          newEdges.splice(found, 1);
+          let updatedEdges = this.state.edges.slice();
+          updatedEdges.splice(found, 1);
 
           this.setState({
-            edges: newEdges
+            edges: updatedEdges
           });
 
         } else {
           // Add edge
           this.setState({
-            edges: this.state.edges.concat({fromId: newEdge[0], toId: newEdge[1]})
+            edges: this.state.edges.concat({fromId: edge[0], toId: edge[1]})
           });
         }
       }
@@ -113,16 +124,15 @@ const App = React.createClass({
     }
 
     let doubleClickTimeout = function() {
+      this.setCurrentVertex(vertexId);
       this.setState({
-        editVertexId: vertexId,
-        editVertexClicked: false
+        transient: {
+          vertexClicked: false
+        }
       });
     }.bind(this);
 
-    this.setState({
-      editVertexClicked: true,
-      editVertexClickTimer: setTimeout(doubleClickTimeout, 200)
-    })
+    this.setVertexClicked(true, setTimeout(doubleClickTimeout, 200));
   },
 
   getVertex(vertexId) {
@@ -130,7 +140,8 @@ const App = React.createClass({
     if (vertex) {
       return vertex;
     }
-    console.log("Tried to fetch illegal ID " + vertexId);
+    console.log("Tried to fetch nonexisting vertex with ID " + vertexId);
+    return false;
   },
 
   updateVertex(newVertex) {
@@ -147,12 +158,12 @@ const App = React.createClass({
       <div>
 
         <TopBar state={this.state} 
-                getVertex={this.getVertex} 
                 setState={this.setState.bind(this)}
                 deleteVertex={this.deleteVertex}
                 updateVertex={this.updateVertex}
                 addVertex={this.addVertex}
-                getEditVertex={this.getEditVertex}
+                getCurrentVertex={this.getCurrentVertex}
+                setCurrentVertex={this.setCurrentVertex}
         />
         
         <div className="canvas">
@@ -160,15 +171,17 @@ const App = React.createClass({
             <Edge key={`edge-${edge.fromId}-${edge.toId}`}
                   fromVertex={this.getVertex(edge.fromId)}
                   toVertex={this.getVertex(edge.toId)}
-                  zoomFactor={this.state.zoomFactor} />)}
+                  zoomFactor={this.state.zoomFactor}
+            />)}
 
           {this.state.vertices.map((vertex) =>
             <Vertex key={`vertex-${vertex.id}`}
-                  editing={this.isEditVertex(vertex.id)}
+                  editing={this.isCurrentVertex(vertex.id)}
                   vertex={vertex}
                   editVertexAction={this.editVertexAction}
                   updateVertex={this.updateVertex}
-                  zoomFactor={this.state.zoomFactor} />)}
+                  zoomFactor={this.state.zoomFactor}
+            />)}
 
           </div>
       </div>
