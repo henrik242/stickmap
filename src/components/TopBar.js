@@ -69,9 +69,10 @@ var TopBar = React.createClass({
   },
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.state.editVertexId > -1) {
+    let editVertex = nextProps.getEditVertex();
+    if (editVertex) {
       this.setState({
-        editVertexDepth: nextProps.getVertex(nextProps.state.editVertexId).depth
+        editVertexDepth: editVertex.depth
       })
     }
   },

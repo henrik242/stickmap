@@ -29,12 +29,28 @@ const App = React.createClass({
     }
   },
 
+  getEditVertex() {
+    if (this.state.editVertexId !== -1) {
+      let vertex = this.getVertex(this.state.editVertexId);
+      if (vertex) return vertex;
+      console.log("Illegal vertex ID: " + this.state.editVertexId);
+      this.setState({
+        editVertexId: -1
+      })
+    }
+    return false;
+  },
+
+  isEditVertex(id) {
+    return id === this.state.editVertexId;
+  },
+
   addVertex() {
     let depth = 0, x = 0, y = 0;
     let newEdges = this.state.edges.slice();
 
-    if (this.state.editVertexId !== -1) {
-      let editVertex = this.getVertex(this.state.editVertexId);
+    let editVertex = this.getEditVertex();
+    if (editVertex) {
       x = editVertex.x + 20;
       y = editVertex.y + 20;
       depth = editVertex.depth;
@@ -50,10 +66,10 @@ const App = React.createClass({
 
   deleteVertex() {
     let newEdges = this.state.edges.slice().filter((edge) =>
-      edge.fromId !== this.state.editVertexId && edge.toId !== this.state.editVertexId);
+      !this.isEditVertex(edge.fromId) && !this.isEditVertex(edge.toId));
 
     let newVertices = this.state.vertices.slice().filter((vertex) =>
-      vertex.id !== this.state.editVertexId);
+      !this.isEditVertex(vertex.id));
 
     this.setState({
       edges: newEdges,
@@ -72,7 +88,7 @@ const App = React.createClass({
         editVertexClicked: false
       });
 
-      if (this.state.editVertexId !== -1 && this.state.editVertexId !== vertexId) {
+      if (this.getEditVertex() && !this.isEditVertex(vertexId)) {
 
         let newEdge = [this.state.editVertexId, vertexId].sort();
         let found = this.state.edges.findIndex(((elem) => elem.fromId === newEdge[0] && elem.toId === newEdge[1]));
@@ -110,7 +126,11 @@ const App = React.createClass({
   },
 
   getVertex(vertexId) {
-    return this.state.vertices.find((elem) => elem.id === vertexId);
+    let vertex = this.state.vertices.find((elem) => elem.id === vertexId);
+    if (vertex) {
+      return vertex;
+    }
+    console.log("Tried to fetch illegal ID " + vertexId);
   },
 
   updateVertex(newVertex) {
@@ -132,18 +152,19 @@ const App = React.createClass({
                 deleteVertex={this.deleteVertex}
                 updateVertex={this.updateVertex}
                 addVertex={this.addVertex}
+                getEditVertex={this.getEditVertex}
         />
         
         <div className="canvas">
           {this.state.edges.map((edge, index) =>
-            <Edge key={index}
+            <Edge key={`edge-${edge.fromId}-${edge.toId}`}
                   fromVertex={this.getVertex(edge.fromId)}
                   toVertex={this.getVertex(edge.toId)}
                   zoomFactor={this.state.zoomFactor} />)}
 
           {this.state.vertices.map((vertex) =>
-            <Vertex key={vertex.id}
-                  editing={vertex.id === this.state.editVertexId}
+            <Vertex key={`vertex-${vertex.id}`}
+                  editing={this.isEditVertex(vertex.id)}
                   vertex={vertex}
                   editVertexAction={this.editVertexAction}
                   updateVertex={this.updateVertex}
