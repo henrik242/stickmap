@@ -4,6 +4,7 @@ const React = require('react');
 const file = require('./file.js');
 const Vertex = require('./Vertex');
 const Edge = require('./Edge');
+const TopBar = require('./TopBar');
 
 const App = React.createClass({
   getInitialState() {
@@ -161,58 +162,20 @@ const App = React.createClass({
     });
   },
 
-  componentDidUpdate() {
-    if (this.state.editVertexId !== -1) {
-      //this.refs.editDepthInput.focus();
-      //this.refs.editDepthInput.select();
-    }
-  },
-
-  clickLoadMap() {
-    this.refs.loadButton.click()
-  },
-
-  submitZoom(num) {
-    this.setState({
-      zoomFactor: Math.ceil(Math.max(0.2, this.state.zoomFactor + num) * 10) / 10
-    })
-  },
-
-  saveState() {
-    file.saveState(this.state);
-  },
-
-  loadState(event) {
-    file.loadState(this.setState.bind(this), event);
-  },
-
   render(){
-    let saveButton = <span><button onClick={this.saveState}>Save map</button></span>;
-
-    let loadButton = <span>
-      <button onClick={this.clickLoadMap}>Load map</button>
-      <input ref="loadButton" style={{display: 'none'}} type="file" onChange={this.loadState} />
-    </span>;
-
-    let addVertexButton = <button onClick={this.addVertex}>Add station</button>;
-
-    let editVertexInput = this.state.editVertexId !== -1 && <span>
-          <button onClick={this.deleteVertex}>Delete station</button>
-          <span style={{paddingLeft: "10"}}>Depth:
-          <input ref="editDepthInput" size="3" onChange={this.handleEditVertex} onKeyDown={this.submitEditVertex} value={this.state.editVertexDepth}/>
-        </span></span>;
-
-    let zoomInput = <span><button onClick={this.submitZoom.bind(this, -0.2)}>-</button>
-      <button onClick={this.submitZoom.bind(this, 0.2)}>+</button></span>;
-
     return (
       <div>
-        {zoomInput}
-        {saveButton}
-        {loadButton}
-        {addVertexButton}
-        {editVertexInput}
 
+        <TopBar state={this.state} 
+                getVertex={this.getVertex} 
+                setState={this.setState.bind(this)}
+                deleteVertex={this.deleteVertex}
+                updateVertex={this.updateVertex}
+                handleEditVertex={this.handleEditVertex}
+                submitEditVertex={this.submitEditVertex}
+                addVertex={this.addVertex}
+        />
+        
         <div className="canvas">
           {this.state.edges.map((edge, index) =>
             <Edge key={index}
