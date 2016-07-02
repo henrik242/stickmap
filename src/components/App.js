@@ -1,7 +1,6 @@
 require('../styles/app.css');
 
 const React = require('react');
-const file = require('./file.js');
 const Vertex = require('./Vertex');
 const Edge = require('./Edge');
 const TopBar = require('./TopBar');
@@ -25,7 +24,6 @@ const App = React.createClass({
       nextVertexId: 5,
       zoomFactor: 1.0,
       editVertexId: -1,
-      editVertexDepth: 0,
       editVertexClicked: false,
       editVertexClickTimer: undefined
     }
@@ -101,7 +99,6 @@ const App = React.createClass({
     let doubleClickTimeout = function() {
       this.setState({
         editVertexId: vertexId,
-        editVertexDepth: this.getVertex(vertexId).depth,
         editVertexClicked: false
       });
     }.bind(this);
@@ -114,43 +111,6 @@ const App = React.createClass({
 
   getVertex(vertexId) {
     return this.state.vertices.find((elem) => elem.id === vertexId);
-  },
-
-  handleEditVertex(e) {
-    this.setDepth(e.target.value);
-  },
-
-  submitEditVertex(e) {
-    switch (e.keyCode) {
-      case 13: // enter
-        this.setDepth(e.target.value);
-        // fallthrough!
-      case 27: // escape
-        this.setState({
-          editVertexDepth: 0,
-          editVertexId: -1
-        });
-        break;
-      case 38: // arrow up
-        e.preventDefault();
-        this.setDepth(this.state.editVertexDepth + 1);
-        break;
-      case 40: // arrow down
-        e.preventDefault();
-        this.setDepth(this.state.editVertexDepth - 1);
-        break;
-    }
-  },
-
-  setDepth(depth) {
-    depth = Math.max(0, depth);
-    let vertex = this.getVertex(this.state.editVertexId);
-    vertex.depth = depth;
-    this.updateVertex(vertex);
-
-    this.setState({
-      editVertexDepth: depth
-    })
   },
 
   updateVertex(newVertex) {
@@ -171,8 +131,6 @@ const App = React.createClass({
                 setState={this.setState.bind(this)}
                 deleteVertex={this.deleteVertex}
                 updateVertex={this.updateVertex}
-                handleEditVertex={this.handleEditVertex}
-                submitEditVertex={this.submitEditVertex}
                 addVertex={this.addVertex}
         />
         
