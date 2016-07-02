@@ -14,7 +14,7 @@ var TopBar = React.createClass({
   },
 
   loadState(event) {
-    file.loadState(this.props.setState, event);
+    file.loadState(this.props.setNewState, event);
   },
 
   clickLoadMap() {
@@ -22,9 +22,7 @@ var TopBar = React.createClass({
   },
 
   submitZoom(num) {
-    this.props.setState({
-      zoomFactor: Math.ceil(Math.max(0.2, this.props.state.zoomFactor + num) * 10) / 10
-    })
+    this.props.setZoomFactor(Math.ceil(Math.max(0.2, this.props.state.zoomFactor + num) * 10) / 10);
   },
 
   handleEditVertex(e) {

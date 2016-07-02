@@ -24,18 +24,14 @@ export function saveState(state) {
     saveJson(JSON.stringify(saveState), "stickmap.json");
 }
 
-export function loadState(setCallerState, event) {
+export function loadState(setNewState, event) {
     let file = event.target.files[0];
     let reader = new FileReader();
     reader.onload = (fileEvent) => {
         let errormsg = "Error: " + file.name + " is not a stickmap state file";
         try {
             var newState = JSON.parse(fileEvent.target.result);
-            if (Array.isArray(newState.edges) && Array.isArray(newState.vertices)) {
-                setCallerState({
-                    ...newState
-                });
-            }
+            setNewState(newState);
             return;
         } catch (ex) {
             errormsg += ": " + ex.toString();

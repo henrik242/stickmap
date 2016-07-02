@@ -153,17 +153,31 @@ const App = React.createClass({
     });
   },
 
+  setNewState(newState) {
+    if (Array.isArray(newState.edges) && Array.isArray(newState.vertices)) {
+      this.setState({
+        ...newState
+      });
+    }
+  },
+
+  setZoomFactor(zoom) {
+    this.setState({
+      zoomFactor: zoom
+    })
+  },
+
   render(){
     return (
       <div>
-
         <TopBar state={this.state} 
-                setState={this.setState.bind(this)}
+                setZoomFactor={this.setZoomFactor}
                 deleteVertex={this.deleteVertex}
                 updateVertex={this.updateVertex}
                 addVertex={this.addVertex}
                 getCurrentVertex={this.getCurrentVertex}
                 setCurrentVertex={this.setCurrentVertex}
+                setNewState={this.setNewState}
         />
         
         <div className="canvas">
@@ -182,7 +196,6 @@ const App = React.createClass({
                   updateVertex={this.updateVertex}
                   zoomFactor={this.state.zoomFactor}
             />)}
-
           </div>
       </div>
     )
