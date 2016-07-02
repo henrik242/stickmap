@@ -46,13 +46,13 @@ const App = React.createClass({
   },
 
   addVertex() {
-    let depth = 0, x = 0, y = 0;
+    let depth = 0, x = parseInt(Math.random() * 30 + 10), y = parseInt(Math.random() * 30 + 10);
     let newEdges = this.state.edges.slice();
 
     let editVertex = this.getEditVertex();
     if (editVertex) {
-      x = editVertex.x + 20;
-      y = editVertex.y + 20;
+      x = editVertex.x + x;
+      y = editVertex.y + y;
       depth = editVertex.depth;
       newEdges.push({fromId: editVertex.id, toId: this.state.nextVertexId});
     }
