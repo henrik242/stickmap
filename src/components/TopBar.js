@@ -64,8 +64,13 @@ var TopBar = React.createClass({
     this.setState({
       currentVertexDepth: depth
     });
-    let hasFocus = document.activeElement === this.refs.editDepthInput && depth !== -1;
-    this.props.setCurrentVertexDepthHasFocus(hasFocus);
+    if (depth === -1) {
+      this.props.setCurrentVertexDepthHasFocus(false);
+    }
+  },
+
+  setHasFocus() {
+    this.props.setCurrentVertexDepthHasFocus(true);
   },
 
   componentWillReceiveProps(nextProps) {
@@ -92,7 +97,11 @@ var TopBar = React.createClass({
     let editVertexInput = this.props.state.currentVertexId !== -1 && <span>
           <button onClick={this.props.deleteVertex}>Delete station</button>
           <span style={{paddingLeft: "10"}}>Depth:
-          <input ref="editDepthInput" size="3" onChange={this.handleEditVertex} onKeyDown={this.submitEditVertex} value={this.state.currentVertexDepth}/>
+          <input ref="editDepthInput" size="3"
+                 onFocus={this.setHasFocus}
+                 onChange={this.handleEditVertex}
+                 onKeyDown={this.submitEditVertex}
+                 value={this.state.currentVertexDepth}/>
         </span></span>;
 
     return <div>
