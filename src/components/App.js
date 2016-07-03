@@ -4,8 +4,13 @@ const React = require('react');
 const Vertex = require('./Vertex');
 const Edge = require('./Edge');
 const TopBar = require('./TopBar');
+const hotkey = require('react-hotkey');
+hotkey.activate('keydown');
+
 
 const App = React.createClass({
+  mixins: [hotkey.Mixin('handleHotkey')],
+  
   getInitialState() {
     return {
       vertices: [
@@ -25,9 +30,56 @@ const App = React.createClass({
       zoomFactor: 1.0,
       currentVertexId: -1,
       transient: {
+        currentVertexDepthHasFocus: false,
         vertexClicked: false,
         vertexClickedTimer: undefined
       }
+    }
+  },
+
+  handleHotkey: function(e) {
+    e.preventDefault();
+
+    let update = function(isX, increase) {
+      let current = this.getCurrentVertex();
+      if (current && !this.state.transient.currentVertexDepthHasFocus) {
+        if (isX) {
+          current.x = current.x + (increase ? 10 : -10);
+        } else {
+          current.y = current.y + (increase ? 10 : -10);
+        }
+        this.updateVertex(current);
+      }
+    }.bind(this);
+
+    switch (e.keyCode) {
+      case 9: // tab
+        let arrayIndex = 0;
+        for (let i = 0; i < this.state.vertices.length - 1; i++) {
+          if (this.state.vertices[i].id == this.state.currentVertexId) {
+            arrayIndex = i + 1;
+            break;
+          }
+        }
+        this.setState({
+          currentVertexId: this.state.vertices[arrayIndex].id
+        });
+        return;
+      case 27: // escape
+        this.currentVertexDepthHasFocus(false);
+        return this.setCurrentVertex(-1);
+      case 37: // left
+        return update(true, false);
+      case 38: // up
+        return update(false, false);
+      case 39: // right
+        return update(true, true);
+      case 40: // down
+        return update(false, true);
+      case 187: // plus
+        return this.addVertex();
+      case 189: // minus
+        return this.deleteVertex();
     }
   },
 
@@ -64,6 +116,7 @@ const App = React.createClass({
 
     this.setState({
       edges: updatedEdges,
+      currentVertexId: this.state.nextVertexId,
       vertices: this.state.vertices.concat({id: this.state.nextVertexId, depth: depth, x: x, y: y}),
       nextVertexId: this.state.nextVertexId + 1
     })
@@ -167,10 +220,18 @@ const App = React.createClass({
     })
   },
 
+  currentVertexDepthHasFocus(hasFocus) {
+    this.setState({
+      transient: {
+        currentVertexDepthHasFocus: hasFocus
+      }
+    })
+  },
+  
   render(){
     return (
       <div>
-        <TopBar state={this.state} 
+        <TopBar state={this.state}
                 setZoomFactor={this.setZoomFactor}
                 deleteVertex={this.deleteVertex}
                 updateVertex={this.updateVertex}
@@ -178,9 +239,10 @@ const App = React.createClass({
                 getCurrentVertex={this.getCurrentVertex}
                 setCurrentVertex={this.setCurrentVertex}
                 setNewState={this.setNewState}
+                currentVertexDepthHasFocus={this.currentVertexDepthHasFocus}
         />
         
-        <div className="canvas">
+        <div className="canvas" onkeydown={this.testing}>
           {this.state.edges.map((edge, index) =>
             <Edge key={`edge-${edge.fromId}-${edge.toId}`}
                   fromVertex={this.getVertex(edge.fromId)}

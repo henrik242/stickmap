@@ -14,7 +14,7 @@ const Vertex = React.createClass({
   },
 
   edit() {
-    this.props.editVertexAction(this.props.vertex.id)
+    this.props.editVertexAction(this.props.vertex.id);
   },
 
   render() {

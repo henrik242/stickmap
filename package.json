@@ -16,7 +16,8 @@
     "react": "0.14.x",
     "react-addons-css-transition-group": "0.14.x",
     "react-dom": "0.14.x",
-    "react-draggable": "^2.1.2"
+    "react-draggable": "^2.1.2",
+    "react-hotkey": "^0.6.0"
   },
   "devDependencies": {
     "babel-core": "5.8.x",

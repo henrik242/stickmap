@@ -5,7 +5,7 @@ var TopBar = React.createClass({
 
   getInitialState() {
     return {
-      currentVertexDepth: 0
+      currentVertexDepth: -1
     }
   },
 
@@ -37,7 +37,7 @@ var TopBar = React.createClass({
         this.setDepth(e.target.value);
         // fallthrough!
       case 27: // escape
-        this.setCurrentVertexDepth(0);
+        this.setCurrentVertexDepth(-1);
         this.props.setCurrentVertex(-1);
         break;
       case 38: // arrow up
@@ -63,14 +63,17 @@ var TopBar = React.createClass({
   setCurrentVertexDepth(depth) {
     this.setState({
       currentVertexDepth: depth
-    })
-
+    });
+    let hasFocus = document.activeElement === this.refs.editDepthInput && depth !== -1;
+    if (hasFocus !== this.props.state.transient.currentVertexDepthHasFocus) {
+      this.props.currentVertexDepthHasFocus(hasFocus);
+    }
   },
 
   componentWillReceiveProps(nextProps) {
     let current = nextProps.getCurrentVertex();
     if (current) {
-      this.setCurrentVertexDepth(current.depth);
+       this.setCurrentVertexDepth(current.depth);
     }
   },
 
