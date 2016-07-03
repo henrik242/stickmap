@@ -38,8 +38,6 @@ const App = React.createClass({
   },
 
   handleHotkey: function(e) {
-    e.preventDefault();
-
     let update = function(isX, increase) {
       let current = this.getCurrentVertex();
       if (current && !this.state.transient.currentVertexDepthHasFocus) {
@@ -54,6 +52,7 @@ const App = React.createClass({
 
     switch (e.keyCode) {
       case 9: // tab
+        e.preventDefault();
         let arrayIndex = 0;
         for (let i = 0; i < this.state.vertices.length - 1; i++) {
           if (this.state.vertices[i].id == this.state.currentVertexId) {
@@ -61,12 +60,9 @@ const App = React.createClass({
             break;
           }
         }
-        this.setState({
-          currentVertexId: this.state.vertices[arrayIndex].id
-        });
-        return;
+        return this.setCurrentVertex(this.state.vertices[arrayIndex].id);
       case 27: // escape
-        this.currentVertexDepthHasFocus(false);
+        this.setCurrentVertexDepthHasFocus(false);
         return this.setCurrentVertex(-1);
       case 37: // left
         return update(true, false);
@@ -84,9 +80,11 @@ const App = React.createClass({
   },
 
   setCurrentVertex(vertexId) {
-    this.setState({
-      currentVertexId: vertexId
-    })
+    if (this.state.currentVertexId !== vertexId) {
+      this.setState({
+        currentVertexId: vertexId
+      })
+    }
   },
 
   getCurrentVertex() {
@@ -178,11 +176,13 @@ const App = React.createClass({
 
     let doubleClickTimeout = function() {
       this.setCurrentVertex(vertexId);
-      this.setState({
-        transient: {
-          vertexClicked: false
-        }
-      });
+      if (this.state.transient.vertexClicked !== false) {
+        this.setState({
+          transient: {
+            vertexClicked: false
+          }
+        });
+      }
     }.bind(this);
 
     this.setVertexClicked(true, setTimeout(doubleClickTimeout, 200));
@@ -215,17 +215,21 @@ const App = React.createClass({
   },
 
   setZoomFactor(zoom) {
-    this.setState({
-      zoomFactor: zoom
-    })
+    if (this.state.zoomFactor !== zoom) {
+      this.setState({
+        zoomFactor: zoom
+      })
+    }
   },
 
-  currentVertexDepthHasFocus(hasFocus) {
-    this.setState({
-      transient: {
-        currentVertexDepthHasFocus: hasFocus
-      }
-    })
+  setCurrentVertexDepthHasFocus(hasFocus) {
+    if (this.state.transient.currentVertexDepthHasFocus !== hasFocus) {
+      this.setState({
+        transient: {
+          currentVertexDepthHasFocus: hasFocus
+        }
+      })
+    }
   },
   
   render(){
@@ -239,7 +243,7 @@ const App = React.createClass({
                 getCurrentVertex={this.getCurrentVertex}
                 setCurrentVertex={this.setCurrentVertex}
                 setNewState={this.setNewState}
-                currentVertexDepthHasFocus={this.currentVertexDepthHasFocus}
+                setCurrentVertexDepthHasFocus={this.setCurrentVertexDepthHasFocus}
         />
         
         <div className="canvas" onkeydown={this.testing}>

@@ -65,9 +65,7 @@ var TopBar = React.createClass({
       currentVertexDepth: depth
     });
     let hasFocus = document.activeElement === this.refs.editDepthInput && depth !== -1;
-    if (hasFocus !== this.props.state.transient.currentVertexDepthHasFocus) {
-      this.props.currentVertexDepthHasFocus(hasFocus);
-    }
+    this.props.setCurrentVertexDepthHasFocus(hasFocus);
   },
 
   componentWillReceiveProps(nextProps) {
