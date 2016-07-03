@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node_modules/.bin/webpack-dev-server --content-base public --port 3000 --hot",
     "postinstall": "npm run build",
-    "build": "webpack"
+    "build": "webpack",
+    "deploy": "NODE_ENV=production npm run build && scp public/* henrik@synth.no:public_html/scuba/stickmap/"
   },
   "author": "Henrik Brautaset Aronsen <henrik@synth.no> (http://henrik.synth.no/scuba/stickmap/)",
   "license": "LGPL-3.0",
