@@ -38,6 +38,7 @@ var TopBar = React.createClass({
         // fallthrough!
       case 27: // escape
         this.setCurrentVertexDepth(0);
+        this.props.setCurrentVertex(-1);
         break;
       case 38: // arrow up
         e.preventDefault();
