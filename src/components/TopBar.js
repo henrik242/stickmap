@@ -22,7 +22,7 @@ var TopBar = React.createClass({
   },
 
   submitZoom(num) {
-    this.props.setZoomFactor(Math.ceil(Math.max(0.2, this.props.state.zoomFactor + num) * 10) / 10);
+    this.props.setZoomFactor(Math.round(Math.max(0.2, this.props.state.zoomFactor + num) * 10) / 10);
   },
 
   handleEditVertex(e) {
@@ -75,6 +75,9 @@ var TopBar = React.createClass({
 
   render() {
 
+    let zoomInput = <span><button onClick={this.submitZoom.bind(this, -0.2)}>-</button>
+      {Math.round(this.props.state.zoomFactor * 100)}%<button onClick={this.submitZoom.bind(this, 0.2)}>+</button></span>;
+
     let saveButton = <span><button onClick={this.saveState}>Save map</button></span>;
 
     let loadButton = <span>
@@ -89,9 +92,6 @@ var TopBar = React.createClass({
           <span style={{paddingLeft: "10"}}>Depth:
           <input ref="editDepthInput" size="3" onChange={this.handleEditVertex} onKeyDown={this.submitEditVertex} value={this.state.currentVertexDepth}/>
         </span></span>;
-
-    let zoomInput = <span><button onClick={this.submitZoom.bind(this, -0.2)}>-</button>
-      <button onClick={this.submitZoom.bind(this, 0.2)}>+</button></span>;
 
     return <div>
           {zoomInput}

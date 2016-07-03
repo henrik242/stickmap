@@ -8,7 +8,7 @@
     "postinstall": "npm run build",
     "build": "webpack"
   },
-  "author": "Henrik Brautaset Aronsen <henrik@synth.no> (http://henrik.synth.no/stickmap/)",
+  "author": "Henrik Brautaset Aronsen <henrik@synth.no> (http://henrik.synth.no/scuba/stickmap/)",
   "license": "LGPL-3.0",
   "dependencies": {
     "lodash": "3.5.x",
