@@ -12,7 +12,6 @@ var plugins = [
 ];
 
 if (!isProduction) {
-  plugins.push(new webpack.HotModuleReplacementPlugin()),
   plugins.push(new webpack.NoErrorsPlugin())
 }
 
